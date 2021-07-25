@@ -145,6 +145,12 @@
 #define HAL_KEY_SW_6_SEL    P0SEL
 #define HAL_KEY_SW_6_DIR    P0DIR
 
+/* SW_7(uart_rx) is at P0.2 */
+#define HAL_KEY_SW_7_PORT   P0
+#define HAL_KEY_SW_7_BIT    BV(2)
+#define HAL_KEY_SW_7_SEL    P0SEL
+#define HAL_KEY_SW_7_DIR    P0DIR
+
 /* edge interrupt */
 #define HAL_KEY_SW_6_EDGEBIT  BV(0)
 #define HAL_KEY_SW_6_EDGE     HAL_KEY_FALLING_EDGE
@@ -155,6 +161,13 @@
 #define HAL_KEY_SW_6_ICTL     P0IEN /* Port Interrupt Control register */
 #define HAL_KEY_SW_6_ICTLBIT  BV(1) /* P0IEN - P0.1 enable/disable bit */
 #define HAL_KEY_SW_6_PXIFG    P0IFG /* Interrupt flag at source */
+
+/* SW_7 interrupts */
+#define HAL_KEY_SW_7_IEN      IEN1  /* CPU interrupt mask register */
+#define HAL_KEY_SW_7_IENBIT   BV(5) /* Mask bit for all of Port_0 */
+#define HAL_KEY_SW_7_ICTL     P0IEN /* Port Interrupt Control register */
+#define HAL_KEY_SW_7_ICTLBIT  BV(2) /* P0IEN - P0.2 enable/disable bit */
+#define HAL_KEY_SW_7_PXIFG    P0IFG /* Interrupt flag at source */
 
 /* Joy stick move at P2.0 */
 #define HAL_KEY_JOY_MOVE_PORT   P2
@@ -202,6 +215,26 @@ uint8 halGetJoyKeyInput(void);
  *                                        FUNCTIONS - API
  **************************************************************************************************/
 
+#if defined ( AMOMCU_UART_RX_MODE)
+bool b_amomcu_uart_rx_mode = false;       // 串口接收模式或者gpio中断模式
+
+//设置p02的功能，1为uart脚， 0为输入中断脚
+void HalKey_Set_P02_for_UartRX_or_GPIO(bool flag)
+{
+    if(flag)
+    {
+        P0SEL |= 0x04; // Configure Port 0.2 as uart rx功能脚
+        HAL_KEY_SW_7_ICTL &= ~HAL_KEY_SW_7_ICTLBIT;      // p0.2管脚中断屏蔽
+        b_amomcu_uart_rx_mode = true; 
+    }
+    else
+    {
+        P0SEL &= ~0x04; // Configure Port 0 as GPIO
+        HAL_KEY_SW_7_ICTL |= HAL_KEY_SW_7_ICTLBIT;      // p0.2管脚中断使能
+        b_amomcu_uart_rx_mode = false; 
+    }
+}
+#endif
 
 /**************************************************************************************************
  * @fn      HalKeyInit
@@ -224,6 +257,8 @@ void HalKeyInit( void )
 #else
   HAL_KEY_SW_6_SEL &= ~(HAL_KEY_SW_6_BIT);    /* Set pin function to GPIO */
   HAL_KEY_SW_6_DIR &= ~(HAL_KEY_SW_6_BIT);    /* Set pin direction to Input */
+  HAL_KEY_SW_7_SEL &= ~(HAL_KEY_SW_7_BIT);    /* Set pin function to GPIO */
+  HAL_KEY_SW_7_DIR &= ~(HAL_KEY_SW_7_BIT);    /* Set pin direction to Input */
   HAL_KEY_JOY_MOVE_SEL &= ~(HAL_KEY_JOY_MOVE_BIT); /* Set pin function to GPIO */
   HAL_KEY_JOY_MOVE_DIR &= ~(HAL_KEY_JOY_MOVE_BIT); /* Set pin direction to Input */
 
@@ -279,7 +314,6 @@ void HalKeyConfig (bool interruptEnable, halKeyCBack_t cback)
     PICTL |= HAL_KEY_SW_6_EDGEBIT;
   #endif
 
-
     /* Interrupt configuration:
      * - Enable interrupt generation at the port
      * - Enable CPU interrupt
@@ -288,6 +322,12 @@ void HalKeyConfig (bool interruptEnable, halKeyCBack_t cback)
     HAL_KEY_SW_6_ICTL |= HAL_KEY_SW_6_ICTLBIT;
     HAL_KEY_SW_6_IEN |= HAL_KEY_SW_6_IENBIT;
     HAL_KEY_SW_6_PXIFG = ~(HAL_KEY_SW_6_BIT);
+
+#if defined ( AMOMCU_UART_RX_MODE)
+    HAL_KEY_SW_7_ICTL |= HAL_KEY_SW_7_ICTLBIT;
+    HAL_KEY_SW_7_IEN |= HAL_KEY_SW_7_IENBIT;
+    HAL_KEY_SW_7_PXIFG = ~(HAL_KEY_SW_7_BIT);
+#endif
 
     /* Rising/Falling edge configuratinn */
     HAL_KEY_JOY_MOVE_ICTL &= ~(HAL_KEY_JOY_MOVE_EDGEBIT);    /* Clear the edge bit */
@@ -321,6 +361,8 @@ void HalKeyConfig (bool interruptEnable, halKeyCBack_t cback)
 #else
     HAL_KEY_SW_6_ICTL &= ~(HAL_KEY_SW_6_ICTLBIT); /* don't generate interrupt */
     HAL_KEY_SW_6_IEN &= ~(HAL_KEY_SW_6_IENBIT);   /* Clear interrupt enable bit */
+    HAL_KEY_SW_7_ICTL &= ~(HAL_KEY_SW_7_ICTLBIT); /* don't generate interrupt */
+    HAL_KEY_SW_7_IEN &= ~(HAL_KEY_SW_7_IENBIT);   /* Clear interrupt enable bit */
 #endif  // !CC2540_MINIDK
 
     osal_set_event(Hal_TaskID, HAL_KEY_EVENT);
@@ -363,6 +405,18 @@ uint8 HalKeyRead ( void )
     keys |= HAL_KEY_SW_6;
   }
 
+#if defined ( AMOMCU_UART_RX_MODE)
+  if(b_amomcu_uart_rx_mode)
+  {
+    keys |= HAL_KEY_SW_7;
+  }  
+#endif
+
+  if (!(HAL_KEY_SW_7_PORT & HAL_KEY_SW_7_BIT))    /* Key is active low */
+  {
+    keys |= HAL_KEY_SW_7;
+  }
+
   if ((HAL_KEY_JOY_MOVE_PORT & HAL_KEY_JOY_MOVE_BIT))  /* Key is active low */
   {
     keys |= halGetJoyKeyInput();
@@ -398,6 +452,18 @@ void HalKeyPoll (void)
   if (!(HAL_KEY_SW_6_PORT & HAL_KEY_SW_6_BIT))    /* Key is active low */
   {
     keys |= HAL_KEY_SW_6;
+  }
+
+#if defined ( AMOMCU_UART_RX_MODE)
+  if(b_amomcu_uart_rx_mode)
+  {
+    keys |= HAL_KEY_SW_7;
+  } 
+#endif
+  
+  if (!(HAL_KEY_SW_7_PORT & HAL_KEY_SW_7_BIT))    /* Key is active low */
+  {
+    keys |= HAL_KEY_SW_7;
   }
 
   if ((HAL_KEY_JOY_MOVE_PORT & HAL_KEY_JOY_MOVE_BIT))  /* Key is active HIGH */
@@ -464,18 +530,20 @@ uint8 halGetJoyKeyInput(void)
   do
   {
     ksave1 = ksave0;    /* save previouse key reading */
-
+    HalAdcSetReference( HAL_ADC_REF_AVDD );
     adc = HalAdcRead (HAL_KEY_JOY_CHN, HAL_ADC_RESOLUTION_8);
 
     if ((adc >= 2) && (adc <= 38))
     {
        ksave0 |= HAL_KEY_UP;
     }
-    else if ((adc >= 74) && (adc <= 88))
+    else if ((adc >= 74) && (adc <= 88))//原版
+    //else if ((adc >= 78) && (adc <= 88))
     {
       ksave0 |= HAL_KEY_RIGHT;
     }
     else if ((adc >= 60) && (adc <= 73))
+    //else if ((adc >= 60) && (adc <= 78))  // left经常在 75    
     {
       ksave0 |= HAL_KEY_LEFT;
     }
@@ -525,6 +593,15 @@ void halProcessKeyInterrupt (void)
     HAL_KEY_SW_6_PXIFG = ~(HAL_KEY_SW_6_BIT); /* Clear Interrupt Flag */
     valid = TRUE;
   }
+
+#if defined ( AMOMCU_UART_RX_MODE)
+  if (HAL_KEY_SW_7_PXIFG & HAL_KEY_SW_7_BIT)  /* Interrupt Flag has been set */
+  {
+    HAL_KEY_SW_7_PXIFG = ~(HAL_KEY_SW_7_BIT); /* Clear Interrupt Flag */
+    b_amomcu_uart_rx_mode = true; 
+    valid = TRUE;
+  }
+#endif
 
   if (HAL_KEY_JOY_MOVE_PXIFG & HAL_KEY_JOY_MOVE_BIT)  /* Interrupt Flag has been set */
   {
@@ -586,7 +663,8 @@ HAL_ISR_FUNCTION( halKeyPort0Isr, P0INT_VECTOR )
 #if defined ( CC2540_MINIDK )
   if ((HAL_KEY_SW_1_PXIFG & HAL_KEY_SW_1_BIT) || (HAL_KEY_SW_2_PXIFG & HAL_KEY_SW_2_BIT))
 #else
-  if (HAL_KEY_SW_6_PXIFG & HAL_KEY_SW_6_BIT)
+  if( (HAL_KEY_SW_6_PXIFG & HAL_KEY_SW_6_BIT)
+   || (HAL_KEY_SW_7_PXIFG & HAL_KEY_SW_7_BIT) )
 #endif
   {
     halProcessKeyInterrupt();
@@ -601,6 +679,7 @@ HAL_ISR_FUNCTION( halKeyPort0Isr, P0INT_VECTOR )
   HAL_KEY_SW_2_PXIFG = 0;
 #else
   HAL_KEY_SW_6_PXIFG = 0;
+  HAL_KEY_SW_7_PXIFG = 0;
 #endif
   HAL_KEY_CPU_PORT_0_IF = 0;
 

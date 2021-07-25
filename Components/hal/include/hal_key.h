@@ -111,6 +111,11 @@ extern bool Hal_KeyIntEnable;
  *                                             FUNCTIONS - API
  **************************************************************************************************/
 
+#if defined ( AMOMCU_UART_RX_MODE)
+//设置p02的功能，1为uart脚， 0为输入中断脚
+void HalKey_Set_P02_for_UartRX_or_GPIO(bool flag);
+#endif
+
 /*
  * Initialize the Key Service
  */

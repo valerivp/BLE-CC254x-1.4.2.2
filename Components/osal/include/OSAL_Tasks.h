@@ -94,7 +94,9 @@ extern uint16 *tasksEvents;
 /*
  * Call each of the tasks initialization functions.
  */
-extern void osalInitTasks( void );
+//extern void osalInitTasks( void );
+extern void osalInitCentralTasks( void );
+extern void osalInitPeripheralTasks( void );
 
 /*********************************************************************
 *********************************************************************/

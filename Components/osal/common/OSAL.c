@@ -1330,7 +1330,9 @@ uint8 osal_int_disable( uint8 interrupt_id )
  *
  * @return  SUCCESS
  */
-uint8 osal_init_system( void )
+ 
+//?? Role //1: ??, 0: ??
+uint8 osal_init_system( BLE_ROLE Role )
 {
 #if !defined USE_ICALL && !defined OSAL_PORT2TIRTOS
   // Initialize the Memory Allocation System
@@ -1352,7 +1354,18 @@ uint8 osal_init_system( void )
 #endif /* USE_ICALL */
 
   // Initialize the system tasks.
-  osalInitTasks();
+#if 0
+    osalInitTasks();
+#else
+  if(Role == BLE_ROLE_CENTRAL)
+  {
+    osalInitCentralTasks();
+  }
+  else
+  {
+    osalInitPeripheralTasks();
+  }
+#endif
 
 #if !defined USE_ICALL && !defined OSAL_PORT2TIRTOS
   // Setup efficient search for the first free block of heap.

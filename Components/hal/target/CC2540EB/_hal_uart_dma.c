@@ -201,7 +201,7 @@
 
 #if !defined( DMA_PM )
 #if defined POWER_SAVING
-#define DMA_PM                     1
+#define DMA_PM                     0//1  
 #else
 #define DMA_PM                     0
 #endif // POWER_SAVING
@@ -505,10 +505,12 @@ static void HalUARTOpenDMA(halUARTCfg_t *config)
                   (config->baudRate == HAL_UART_BR_19200) ||
                   (config->baudRate == HAL_UART_BR_38400) ||
                   (config->baudRate == HAL_UART_BR_57600) ||
-                  (config->baudRate == HAL_UART_BR_115200));
+                  (config->baudRate == HAL_UART_BR_115200) ||
+					(config->baudRate == HAL_UART_BR_230400));
 
   if (config->baudRate == HAL_UART_BR_57600 ||
-      config->baudRate == HAL_UART_BR_115200)
+      config->baudRate == HAL_UART_BR_115200 ||
+	 config->baudRate == HAL_UART_BR_230400)
   {
     UxBAUD = 216;
   }
@@ -528,6 +530,9 @@ static void HalUARTOpenDMA(halUARTCfg_t *config)
     case HAL_UART_BR_38400:
     case HAL_UART_BR_57600:
       UxGCR = 10;
+      break;
+    case HAL_UART_BR_230400:
+      UxGCR = 12;
       break;
     default:
       // HAL_UART_BR_115200

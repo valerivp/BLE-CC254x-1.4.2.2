@@ -65,9 +65,9 @@ typedef unsigned short  uint16;   //!< Unsigned 16 bit integer
 
 typedef signed   long   int32;    //!< Signed 32 bit integer
 typedef unsigned long   uint32;   //!< Unsigned 32 bit integer
-
+#ifndef __cplusplus
 typedef unsigned char   bool;     //!< Boolean data type
-
+#endif
 typedef uint8           halDataAlign_t; //!< Used for byte alignment
 /** @} End HAL_TYPES */
 
@@ -124,6 +124,9 @@ typedef uint8           halDataAlign_t; //!< Used for byte alignment
 #define NULL 0
 #endif
 
+#ifndef nullptr
+#define nullptr 0
+#endif
 
 /**************************************************************************************************
  */

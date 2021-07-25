@@ -67,6 +67,8 @@ extern "C"
 #define SIMPLEPROFILE_CHAR3                   2  // RW uint8 - Profile Characteristic 3 value
 #define SIMPLEPROFILE_CHAR4                   3  // RW uint8 - Profile Characteristic 4 value
 #define SIMPLEPROFILE_CHAR5                   4  // RW uint8 - Profile Characteristic 4 value
+#define SIMPLEPROFILE_CHAR6                   5  // RW uint8 - Profile Characteristic 5 value
+#define SIMPLEPROFILE_CHAR7                   6  // RW uint8 - Profile Characteristic 5 value
   
 // Simple Profile Service UUID
 #define SIMPLEPROFILE_SERV_UUID               0xFFF0
@@ -77,14 +79,18 @@ extern "C"
 #define SIMPLEPROFILE_CHAR3_UUID            0xFFF3
 #define SIMPLEPROFILE_CHAR4_UUID            0xFFF4
 #define SIMPLEPROFILE_CHAR5_UUID            0xFFF5
+#define SIMPLEPROFILE_CHAR6_UUID            0xFFF6
+#define SIMPLEPROFILE_CHAR7_UUID            0xFFF7
   
 // Simple Keys Profile Services bit fields
 #define SIMPLEPROFILE_SERVICE               0x00000001
 
 // Length of Characteristic 5 in bytes
-#define SIMPLEPROFILE_CHAR5_LEN           5  
-
-/*********************************************************************
+#define SIMPLEPROFILE_CHAR5_LEN          5
+#define SIMPLEPROFILE_CHAR6_LEN          20    //主机读写 (理应最大可设成20， 但不知为何目前只能最大设成19 --amomcu)
+#define SIMPLEPROFILE_CHAR7_LEN          20    //从机通知, 这里不需要用到
+  
+/********************************************************************* 
  * TYPEDEFS
  */
 
@@ -151,7 +157,7 @@ extern bStatus_t SimpleProfile_SetParameter( uint8 param, uint8 len, void *value
  *          data type (example: data type of uint16 will be cast to 
  *          uint16 pointer).
  */
-extern bStatus_t SimpleProfile_GetParameter( uint8 param, void *value );
+extern bStatus_t SimpleProfile_GetParameter( uint8 param, void *value, uint8 *returnBytes);
 
 
 /*********************************************************************

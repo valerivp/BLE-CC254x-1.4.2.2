@@ -78,6 +78,7 @@ extern "C"
 #define HAL_UART_BR_38400  0x02
 #define HAL_UART_BR_57600  0x03
 #define HAL_UART_BR_115200 0x04
+#define HAL_UART_BR_230400 0x05
 
 /* Frame Format constant */
 

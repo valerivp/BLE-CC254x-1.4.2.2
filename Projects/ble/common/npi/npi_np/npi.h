@@ -94,7 +94,7 @@ extern "C"
 #endif //Endif for NPI_UART_PORT
 
 #if !defined( NPI_UART_FC )
-#define NPI_UART_FC                    TRUE
+#define NPI_UART_FC                    FALSE
 #endif // !NPI_UART_FC
 
 #define NPI_UART_FC_THRESHOLD          48
@@ -130,8 +130,10 @@ typedef void (*npiCBack_t) ( uint8 port, uint8 event );
 //
 
 extern void   NPI_InitTransport( npiCBack_t npiCBack );
+extern void   NPI_InitTransportEx( npiCBack_t npiCBack, uint8 baudrate, uint8 parity, uint8 stopbit);
 extern uint16 NPI_ReadTransport( uint8 *buf, uint16 len );
 extern uint16 NPI_WriteTransport( uint8 *, uint16 );
+extern uint16 NPI_WriteTransport_ln( uint8 *buf, uint16 len );
 extern uint16 NPI_RxBufLen( void );
 extern uint16 NPI_GetMaxRxBufSize( void );
 extern uint16 NPI_GetMaxTxBufSize( void );

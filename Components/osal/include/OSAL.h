@@ -268,7 +268,14 @@ extern void (*osal_eventloop_hook)(void);
   /*
    * Initialize the Task System
    */
-  extern uint8 osal_init_system( void );
+  //extern uint8 osal_init_system( void );
+typedef enum
+{
+    BLE_ROLE_PERIPHERAL = 0,        //从机角色
+    BLE_ROLE_CENTRAL = 1,           //主机角色    
+}BLE_ROLE;
+
+  extern uint8 osal_init_system(  BLE_ROLE Role  );
 
   /*
    * System Processing Loop

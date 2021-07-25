@@ -124,6 +124,29 @@ void NPI_InitTransport( npiCBack_t npiCBack )
   return;
 }
 
+void NPI_InitTransportEx( npiCBack_t npiCBack, uint8 baudrate, uint8 parity, uint8 stopbit)
+{
+  halUARTCfg_t uartConfig;
+
+  // configure UART
+  uartConfig.configured           = TRUE;
+  uartConfig.baudRate             = baudrate;//NPI_UART_BR;
+  //uartConfig.parity              = parity;
+  //uartConfig.stopbit              = stopbit;
+  uartConfig.flowControl          = NPI_UART_FC;
+  uartConfig.flowControlThreshold = NPI_UART_FC_THRESHOLD;
+  uartConfig.rx.maxBufSize        = NPI_UART_RX_BUF_SIZE;
+  uartConfig.tx.maxBufSize        = NPI_UART_TX_BUF_SIZE;
+  uartConfig.idleTimeout          = NPI_UART_IDLE_TIMEOUT;
+  uartConfig.intEnable            = NPI_UART_INT_ENABLE;
+  uartConfig.callBackFunc         = (halUARTCBack_t)npiCBack;
+
+  // start UART
+  // Note: Assumes no issue opening UART port.
+  (void)HalUARTOpen( NPI_UART_PORT, &uartConfig );
+
+  return;
+}
 
 /*******************************************************************************
  * @fn          NPI_ReadTransport
@@ -166,7 +189,14 @@ uint16 NPI_ReadTransport( uint8 *buf, uint16 len )
  */
 uint16 NPI_WriteTransport( uint8 *buf, uint16 len )
 {
-  return( HalUARTWrite( NPI_UART_PORT, buf, len ) );
+  return ( HalUARTWrite( NPI_UART_PORT, buf, len ) );
+}
+
+// 多打印换行回车符号
+uint16 NPI_WriteTransport_ln( uint8 *buf, uint16 len )
+{
+  NPI_WriteTransport(buf, len);
+  return NPI_WriteTransport((uint8 *)"\r\n", 2);
 }
 
 
